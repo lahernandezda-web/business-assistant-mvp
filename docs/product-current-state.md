@@ -446,3 +446,88 @@ Objetivo del siguiente bloque (solo documentación / diseño):
 5. **No** crear código todavía.
 
 **Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP, Contacts MVP v1, Follow-up Tasks MVP v1, Navigation MVP.
+
+---
+
+## GitHub Private Push Checkpoint
+
+Checkpoint tras el **primer push** del producto a un **repositorio privado** en GitHub (`origin` → `main`).
+
+### 1. Estado
+
+| Ítem | Estado |
+|------|--------|
+| Repo privado en GitHub | Creado: `https://github.com/lahernandezda-web/business-assistant-mvp` |
+| Remoto `origin` | Configurado apuntando al repo privado |
+| Rama local | `main` |
+| Primer push | Completado a `origin/main` |
+| Tracking | Rama local `main` trackea `origin/main` |
+| Working tree | Limpio después del push |
+
+**Commits relevantes recientes (referencia):**
+
+- `b757952` — fix: harden assistant capability boundaries
+- `315ec0f` — docs: add demo seed checklist
+- `17abd56` — docs: add product demo MVP spec
+- `d7cd176` — docs: add navigation MVP checkpoint
+- `0a76415` — feat: add module navigation
+
+### 2. Seguridad
+
+- `web/.env.local` **no fue leído** durante la preparación ni el push.
+- `web/.env.local` está **ignorado** por `web/.gitignore` (regla `.env*.local`).
+- Solo están versionadas **plantillas** (`.env.example`, `web/.env.example`).
+- **No** se subieron claves reales ni archivos `.env` / `.env.local` de entorno.
+- **No** se subieron `node_modules`, `.next` ni logs.
+- **`CURSOR.p1`** no fue tocado; la base permanece congelada.
+
+### 3. Estado funcional del MVP
+
+| Área | Estado |
+|------|--------|
+| Business Profile | Funcionando |
+| Chat con Claude | Funcionando (local) |
+| Contexto de negocio en chat | Funcionando (inyección desde perfil más reciente) |
+| Assistant Capability Boundaries | Endurecido (`b757952`) |
+| Contacts MVP | Funcionando |
+| Follow-up Tasks MVP | Funcionando |
+| Navegación (`ModuleNav`) | Funcionando |
+| Lint (`npm run lint` desde `web/`) | OK |
+| TypeScript (`npx tsc --noEmit` desde `web/`) | OK |
+| Final MVP Review | Superado |
+| Product Demo SPEC | Creada |
+| Demo Seed Checklist | Creado |
+
+### 4. Límites actuales
+
+| Área | Estado |
+|------|--------|
+| n8n | Desactivado (`AUTOMATIONS_ENABLED=false`) |
+| WhatsApp | No implementado |
+| Email / calendar | No implementados |
+| Voz | No implementada |
+| Deployment | No hay |
+| CRM completo | No es CRM completo |
+| Sistema clínico | No es sistema clínico |
+| Datos sensibles reales | **No** debe usarse con datos reales sensibles |
+
+### 5. Decisión arquitectónica
+
+**`business-assistant-mvp`** queda definido como **Nivel 2** — producto demo genérico para pequeños negocios, ahora **respaldado en GitHub privado**.
+
+Cualquier **Nivel 3** futuro debe decidirse **explícitamente** antes de mezclar:
+
+- web propia del usuario;
+- cliente piloto;
+- implementación real;
+- demo vertical dental;
+- producto SaaS deployable.
+
+### 6. Próximos pasos posibles
+
+- Preparar **demo manual** con datos ficticios (ver Product Demo SPEC y Demo Seed Checklist).
+- **Limpiar datos de verificación** en Supabase si se desea (opcional).
+- **Decidir Nivel 3** (web propia, piloto, vertical, SaaS, etc.).
+- Crear **repo separado** para implementación real (sin mezclar con esta demo genérica).
+- Preparar **deployment** solo con decisión explícita y checklist de secretos.
+- Activar **n8n** solo con SPEC previa y `AUTOMATIONS_ENABLED` deliberado.
