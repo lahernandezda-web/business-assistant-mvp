@@ -13,6 +13,8 @@ import { validateChatTurnBody } from "@/lib/chat/validate-input";
 import { updateConversationSummaryIfNeeded } from "@/lib/chat/summary";
 import { generateConversationTitleIfNeeded } from "@/lib/chat/title";
 import { emitConversationCreatedEvent } from "@/lib/automations/events";
+import { formatBusinessProfileContext } from "@/lib/business-profile/format-context";
+import { getLatestBusinessProfile } from "@/lib/business-profile/persistence";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -131,11 +133,27 @@ export async function POST(request: Request) {
     console.warn("chat/turn: unexpected error loading conversation summary");
   }
 
+  let business_profile_context: string | undefined;
+  try {
+    const profileLoaded = await getLatestBusinessProfile();
+    if (profileLoaded.ok && profileLoaded.data) {
+      const formatted = formatBusinessProfileContext(profileLoaded.data);
+      if (formatted) {
+        business_profile_context = formatted;
+      }
+    } else if (!profileLoaded.ok) {
+      console.warn("chat/turn: could not load business profile");
+    }
+  } catch {
+    console.warn("chat/turn: unexpected error loading business profile");
+  }
+
   const turn = await handleChatTurn({
     content,
     conversation_id: conversationId,
     context_messages: contextLoaded.data,
     ...(conversation_summary ? { conversation_summary } : {}),
+    ...(business_profile_context ? { business_profile_context } : {}),
   });
 
   const assistantPersisted = await saveMessage({

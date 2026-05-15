@@ -28,6 +28,8 @@ export type ChatTurnInput = {
   context_messages?: ChatContextMessage[];
   /** Texto del resumen acumulado en BD; opcional, solo contexto para el modelo. */
   conversation_summary?: string;
+  /** Bloque de contexto comercial; opcional, solo contexto para el modelo. */
+  business_profile_context?: string;
 };
 
 export type ChatTurnResult = {

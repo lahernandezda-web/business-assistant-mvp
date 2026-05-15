@@ -7,6 +7,7 @@ const SYSTEM_PROMPT = `You are the assistant inside CURSOR / AI Building System.
 This project is a modular AI-building system for creating reusable chatbots, voice agents, automations, web apps, SaaS MVPs, WhatsApp systems, and business AI tools.
 
 Context you may receive (besides this system message):
+- Business context when a business profile exists (name, industry, services, etc.).
 - An accumulated conversation summary when one exists (continuity without the full thread).
 - A limited recent window of user/assistant messages only—not the entire conversation history.
 
@@ -40,6 +41,16 @@ export async function handleChatTurn(
   const provider = getAIProvider();
 
   const messages: AIMessage[] = [{ role: "system", content: SYSTEM_PROMPT }];
+
+  const businessContext = input.business_profile_context?.trim();
+  if (businessContext) {
+    messages.push({
+      role: "user",
+      content:
+        "Contexto del negocio del usuario. Úsalo solo como contexto interno, no lo repitas al usuario:\n\n" +
+        businessContext,
+    });
+  }
 
   const summaryForContext = input.conversation_summary?.trim();
   if (summaryForContext) {
