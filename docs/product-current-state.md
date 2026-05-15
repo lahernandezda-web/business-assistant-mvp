@@ -28,7 +28,8 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 | **Claude** | Activado manualmente en entorno local (`web/.env.local`; clave no documentada). Modelo: `claude-haiku-4-5`. |
 | **Límites de capacidades** | Bloque *Current product capabilities* en system prompt (`chat-engine.ts`). |
 | **n8n / automatizaciones** | Desactivado en producto (`AUTOMATIONS_ENABLED=false`). |
-| **Contacts / leads / tasks** | No implementados. |
+| **Contacts MVP v1** | Completado (SPEC, SQL, API GET/POST, UI `/contacts`). Sin integración con chat. |
+| **Follow-up tasks** | No implementados. |
 | **Auth / multi-tenant** | No implementados. |
 
 **Commits relevantes del producto:**
@@ -41,6 +42,7 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 - `feat: add business profile UI`
 - `feat: inject business profile into chat context`
 - `feat: add assistant capability boundaries`
+- `feat: add contacts UI` (API/SQL/SPEC en bloques previos del módulo Contacts)
 
 ---
 
@@ -92,6 +94,35 @@ Capacidades reutilizadas en el producto (sin duplicar la base):
 - Sin perfil → el chat funciona igual que antes.
 - Error al cargar perfil → `console.warn` y el turno continúa sin contexto de negocio (no bloquea el chat).
 
+### Contacts MVP v1
+
+#### SPEC
+
+- **Archivo:** `docs/spec-contacts-mvp.md`
+
+#### SQL
+
+- **Archivo:** `supabase/product-contacts.sql`
+- **Tabla:** `public.contacts` (ejecutado manualmente en Supabase)
+- **Campos principales:** `id`, `name`, `email`, `phone`, `source`, `status`, `contact_type`, `interest`, `notes`, `last_contacted_at`, `next_follow_up_at`, `metadata`, `created_at`, `updated_at`
+
+#### API
+
+- **Módulo:** `web/lib/contacts/types.ts`, `validate-input.ts`, `persistence.ts`
+- **Ruta:** `web/app/api/contacts/route.ts`
+- **Endpoints:**
+  - `GET /api/contacts` — hasta 50 contactos recientes (`created_at` desc)
+  - `POST /api/contacts` — crea contacto validado
+- **Reglas:** `name` obligatorio; `status` y `contact_type` validados; fechas ISO o `null`; `metadata` objeto plano; 400 input inválido; 500 errores seguros.
+
+#### UI
+
+- **Archivo:** `web/app/contacts/page.tsx`
+- **Ruta:** `/contacts`
+- **Comportamiento:** carga y listado; estado vacío; formulario de creación; validación de `name` en UI; estados loading/saving/error/éxito; nuevo contacto arriba; persiste tras recargar; nota de privacidad (no datos clínicos sensibles).
+
+**Sin integración con chat ni automatizaciones en este MVP.**
+
 ---
 
 ## Verified Behavior
@@ -108,6 +139,9 @@ Comportamiento comprobado en el producto:
 | Modo stub | Respuesta incluye `[stub: business context received]` cuando hay contexto; no imprime el perfil completo. |
 | `npm run lint` (desde `web/`) | OK |
 | `npx tsc --noEmit` (desde `web/`) | OK |
+| `GET /api/contacts` | Lista contactos (vacía o con datos). |
+| `POST /api/contacts` | Crea contacto válido; 400 si input inválido. |
+| `/contacts` | Carga, crea contacto (p. ej. «Paciente UI prueba»), aparece en lista y persiste tras recargar. |
 
 ---
 
@@ -169,11 +203,62 @@ El producto **no** tiene aún (no debe presentarse como activo):
 | Voz | No implementada |
 | n8n activo para negocio | Desactivado (`AUTOMATIONS_ENABLED=false`) |
 | Automatizaciones externas reales | No implementadas |
-| Contacts / leads / `follow_up_tasks` | No implementados |
+| Contacts MVP (listar/crear manual) | Implementado |
+| `follow_up_tasks` | No implementados |
+| Edición/búsqueda/automatización de contactos | No implementados |
 
 ### 6. Próximo paso (referencia)
 
-Ver sección **Recommended Next Step** más abajo: **Contacts MVP — SPEC**.
+Ver sección **Recommended Next Step** más abajo: **Follow-up Tasks MVP — SPEC**.
+
+---
+
+## Contacts MVP Checkpoint
+
+Checkpoint tras completar **Contacts MVP v1** (SPEC, SQL, API mínima, UI `/contacts`).
+
+### 1. Estado actual
+
+- **Contacts MVP v1 completado.**
+- SPEC creada (`docs/spec-contacts-mvp.md`).
+- SQL creado y **ejecutado manualmente** en Supabase (`public.contacts`).
+- API mínima **GET/POST** implementada.
+- UI mínima **`/contacts`** implementada.
+- **No** hay integración con chat todavía.
+- **No** hay automatizaciones todavía.
+
+### 2. Qué permite hacer ahora
+
+- Listar contactos recientes.
+- Crear contactos manualmente desde la UI.
+- Guardar datos **administrativos/comerciales mínimos** (nombre, email, teléfono, fuente, estado, tipo, interés, notas, próximo seguimiento).
+- Registrar interés, fuente, estado, tipo, notas y fecha de próximo seguimiento.
+
+### 3. Qué NO permite todavía
+
+- Editar contactos.
+- Eliminar contactos.
+- Ver detalle individual.
+- Buscar o filtrar.
+- Integrarse con chat.
+- Detectar leads automáticamente.
+- Enviar WhatsApp o email.
+- Agendar citas reales.
+- Crear tareas de seguimiento automáticamente.
+- Ejecutar automatizaciones (n8n u otras).
+
+### 4. Seguridad y privacidad
+
+- **Contacts MVP no debe usarse para historia clínica.**
+- **No** guardar diagnósticos ni tratamientos clínicos.
+- **No** guardar documentos identificativos ni tarjetas de pago.
+- **Minimizar** datos personales; `notes` e `interest` solo para contexto comercial/administrativo.
+- **No** enviar el listado completo de contactos a Claude salvo necesidad explícita en fases futuras (contexto mínimo).
+- Mantener **control humano** sobre cualquier seguimiento o acción futura.
+
+### 5. Próximo paso (referencia)
+
+Ver **Recommended Next Step**: **Follow-up Tasks MVP — SPEC**.
 
 ---
 
@@ -185,6 +270,7 @@ Ver sección **Recommended Next Step** más abajo: **Contacts MVP — SPEC**.
 - **n8n webhook secret** — solo server-side; no activar n8n sin decisión explícita.
 - **Contexto al modelo** — ventana reciente acotada + summary; **no** enviar historial completo a proveedores de IA.
 - **Business Profile en chat** — bloque compacto; sin loguear payloads completos ni secretos.
+- **Contacts** — no almacenar datos clínicos sensibles; no volcar contactos completos al modelo; seguimiento con confirmación humana.
 - **Errores de API** — mensajes seguros al cliente; sin exponer errores crudos de Supabase.
 
 ---
@@ -193,7 +279,8 @@ Ver sección **Recommended Next Step** más abajo: **Contacts MVP — SPEC**.
 
 No forman parte del estado actual ni del siguiente paso documentado aquí:
 
-- Contacts, leads, `follow_up_tasks`
+- Edición/búsqueda/automatización de contactos; integración contacts ↔ chat
+- `follow_up_tasks`
 - WhatsApp, voz
 - Billing, dashboard complejo
 - Multi-tenant, auth avanzada
@@ -204,15 +291,15 @@ No forman parte del estado actual ni del siguiente paso documentado aquí:
 
 ## Recommended Next Step
 
-**Bloque recomendado:** **Contacts MVP — SPEC**
+**Bloque recomendado:** **Follow-up Tasks MVP — SPEC**
 
 Objetivo del siguiente bloque (solo documentación / diseño):
 
-1. Definir primero la **especificación** de contactos/leads mínimos.
+1. Definir **tareas simples de seguimiento** (asociadas o no a contactos).
 2. **No** crear SQL todavía.
 3. **No** implementar API todavía.
-4. Diseñar qué será un **contacto** o **lead** mínimo en el producto (campos, relación con conversaciones y Business Profile).
-5. Mantener el MVP **simple**; evitar un CRM completo.
-6. Alinear con límites de capacidades del asistente (sin prometer CRM activo hasta que exista).
+4. **No** automatizar envíos (WhatsApp, email, etc.).
+5. Mantener **confirmación humana** para cualquier acción futura.
+6. Alinear con Contacts MVP y Business Profile sin prometer CRM ni automatizaciones activas.
 
-**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP.
+**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP, Contacts MVP v1.
