@@ -2,6 +2,64 @@ import type { ChatTurnInput, ChatTurnResult } from "./types";
 import { getAIProvider } from "../ai/get-provider";
 import type { AIMessage } from "../ai/types";
 
+/**
+ * Quita formato Markdown visual residual de la respuesta del asistente
+ * antes de persistirla o mostrarla. Solo texto plano; conserva saltos de línea.
+ */
+function sanitizeAssistantReplyPlainText(raw: string): string {
+  const lines = raw.split("\n");
+  const outLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (isSeparatorOnlyLine(trimmed)) {
+      continue;
+    }
+    outLines.push(stripMarkdownHeadingPrefix(line));
+  }
+
+  let text = outLines.join("\n");
+  text = stripDoubleAsteriskBold(text);
+  text = stripDoubleUnderscoreBoldConservative(text);
+  // Tras quitar líneas separadoras, máximo una línea en blanco entre párrafos.
+  text = text.replace(/\n{3,}/g, "\n\n");
+  return text;
+}
+
+/** Líneas que son solo separadores tipo --- / *** / ___ (hrs markdown). */
+function isSeparatorOnlyLine(trimmed: string): boolean {
+  const compact = trimmed.replace(/\s+/g, "");
+  if (compact.length < 3) return false;
+  // Solo separadores repetidos (-, underscores, *, = y guiones unicode típicos).
+  return /^[\-_=*\u2010-\u2015]{3,}$/.test(compact);
+}
+
+function stripMarkdownHeadingPrefix(line: string): string {
+  const m = /^(\s*)(#{1,6})(\s*)(.*)$/.exec(line);
+  if (!m) return line;
+  return m[1] + m[4];
+}
+
+function stripDoubleAsteriskBold(text: string): string {
+  return text.replace(/\*\*([\s\S]*?)\*\*/g, (_, inner: string) => inner);
+}
+
+/**
+ * Quita __frase__ solo si parece énfasis (p. ej. contiene espacio o es largo),
+ * no identificadores tipo __init__.
+ */
+function stripDoubleUnderscoreBoldConservative(text: string): string {
+  return text.replace(
+    /(^|[\s(])__((?:(?!__).)+)__(?=[\s).,!?;:]|$)/gm,
+    (full, before: string, inner: string) => {
+      const t = inner.trim();
+      if (/^\w{1,40}$/u.test(t)) {
+        return full;
+      }
+      return before + inner;
+    },
+  );
+}
 const SYSTEM_PROMPT = `You are the assistant inside CURSOR / AI Building System.
 
 This project is a modular AI-building system for creating reusable chatbots, voice agents, automations, web apps, SaaS MVPs, WhatsApp systems, and business AI tools.
@@ -47,12 +105,24 @@ When the user asks about appointments, agenda, reminders, follow-up, WhatsApp, e
 - Do not claim that any channel or integration is already active unless the user pasted evidence in the chat.
 - If the user asks about unavailable capabilities, explain they can be planned or implemented later; stay professional, useful, and commercially clear.
 
+Plain text output (mandatory — the chat UI does not render Markdown):
+- Output ONLY plain text. Never use Markdown syntax of any kind.
+- Forbidden: # headings, lines of only dashes (---), ** or __ bold/italic, backticks, blockquotes, numbered Markdown lists with "1." formatting tricks.
+- Use simple labels with a colon instead, e.g. "Activo ahora:" and "Integración futura (roadmap):" on their own lines.
+- When drafting a message for the user to send, put the draft between blank lines—never wrap it with ---.
+
 Response style (default unless the user clearly asks otherwise):
+- Respond clearly, briefly, and in a visually pleasant way for commercial demos.
+- Avoid long responses unless the user asks for detail; for demos, prefer about 4–7 short lines or compact blocks—not walls of text.
 - Be brief and direct by default; prioritize clarity over volume.
+- Use short sentences and leave blank lines between ideas so replies scan well on screen.
+- Do not return huge dense blocks; break ideas into readable chunks.
+- If you give a list, use at most 3–5 points.
+- When mentioning future capabilities, briefly label them as roadmap or future integration—not live today.
 - Avoid long bullet lists or multi-section essays unless the user explicitly asks for a list or detailed breakdown.
 - If the user asks for one sentence, a single phrase, or "en una frase", reply with exactly one short sentence—no lists or extra paragraphs.
 - Offer the next step in small chunks; do not map many future phases or workstreams in one reply.
-- Stay practical and conversational; use minimal Markdown (headings, bold, code blocks) only when it genuinely aids scanning—plain sentences are fine.
+- Stay professional, approachable, and commercially honest; plain text only.
 
 Technical scope (for your awareness only; do not advertise as live user-facing features): server-side chat with Supabase persistence, conversation list, capped recent message window, and optional cumulative summaries. WhatsApp, n8n, voice, public website widgets, CRM, and real scheduling are not connected in this MVP.`;
 
@@ -98,7 +168,7 @@ export async function handleChatTurn(
   const result = await provider.complete({ messages });
 
   return {
-    reply: result.content,
+    reply: sanitizeAssistantReplyPlainText(result.content),
     conversation_id: input.conversation_id ?? null,
   };
 }

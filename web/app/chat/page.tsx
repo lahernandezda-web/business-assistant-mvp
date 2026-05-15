@@ -458,7 +458,7 @@ export default function ChatPage() {
         )}
       </section>
 
-      <ul className="flex min-h-[12rem] flex-1 flex-col gap-3 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+      <ul className="flex min-h-[12rem] flex-1 flex-col gap-4 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/80">
         {historyLoading ? (
           <li className="text-sm text-zinc-500 dark:text-zinc-500">
             Cargando historial…
@@ -473,22 +473,24 @@ export default function ChatPage() {
           messages.map((m) => (
             <li
               key={m.clientKey}
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+              className={`max-w-[min(100%,38rem)] rounded-2xl px-4 py-3 shadow-sm ${
                 m.role === "user"
                   ? "self-end bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : "self-start bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                  : "self-start border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               }`}
             >
-              <span className="mb-1 block text-xs font-medium opacity-70">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide opacity-60">
                 {m.role === "user" ? "Tú" : "Asistente"}
               </span>
-              {m.content}
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                {m.content}
+              </p>
             </li>
           ))
         )}
         {pending ? (
           <li
-            className="self-start max-w-[85%] rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 italic dark:border-zinc-600 dark:bg-zinc-900/50 dark:text-zinc-400"
+            className="max-w-[min(100%,38rem)] self-start rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-3 text-sm leading-relaxed text-zinc-500 italic shadow-sm dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
             aria-live="polite"
           >
             Pensando…
