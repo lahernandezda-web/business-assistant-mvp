@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Este documento resume el **estado actual del producto derivado** `business-assistant-mvp`: qué está implementado, qué está verificado y qué queda fuera de alcance. Sirve como checkpoint rápido para futuros bloques de trabajo (Cursor, revisiones, activación controlada de Claude, etc.).
+Este documento resume el **estado actual del producto derivado** `business-assistant-mvp`: qué está implementado, qué está verificado y qué queda fuera de alcance. Sirve como checkpoint rápido para futuros bloques de trabajo (Cursor, revisiones, specs de módulos, etc.).
 
 **No describe la base congelada** `CURSOR.p1`. Para la base reutilizable, ver la documentación y specs heredadas en este repo (`docs/current-state.md`, specs de chat/automatización, etc.).
 
@@ -23,13 +23,13 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 | Área | Estado |
 |------|--------|
 | **Business Profile MVP** | Completado (SQL, API, UI, integración con chat). |
-| **Chat base** | Funcional en modo **stub** (`AI_PROVIDER=stub`). |
+| **Chat base** | Funcional con **Claude** en local; stub sigue disponible si se configura `AI_PROVIDER=stub`. |
 | **Supabase** | Configurado (proyecto propio del producto). |
-| **Claude** | Desactivado (no activar sin decisión explícita). |
+| **Claude** | Activado manualmente en entorno local (`web/.env.local`; clave no documentada). Modelo: `claude-haiku-4-5`. |
+| **Límites de capacidades** | Bloque *Current product capabilities* en system prompt (`chat-engine.ts`). |
 | **n8n / automatizaciones** | Desactivado en producto (`AUTOMATIONS_ENABLED=false`). |
 | **Contacts / leads / tasks** | No implementados. |
 | **Auth / multi-tenant** | No implementados. |
-| **Working tree** | Limpio antes de este bloque de documentación; cambios de doc pendientes de commit por el usuario. |
 
 **Commits relevantes del producto:**
 
@@ -40,6 +40,7 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 - `feat: add business profile API`
 - `feat: add business profile UI`
 - `feat: inject business profile into chat context`
+- `feat: add assistant capability boundaries`
 
 ---
 
@@ -110,11 +111,77 @@ Comportamiento comprobado en el producto:
 
 ---
 
+## Claude Activation Checkpoint
+
+Checkpoint tras **Controlled Claude Activation** y **Assistant Capability Boundaries MVP**.
+
+### 1. Activación de Claude
+
+- **Proveedor IA actual:** Claude (`AI_PROVIDER=claude`).
+- **Modelo:** `claude-haiku-4-5`.
+- La API key está en `web/.env.local` (solo entorno local); **no** debe imprimirse, leerse en chats ni documentarse aquí.
+- La activación fue **manual y local** por el usuario del producto.
+
+### 2. Verificación realizada
+
+| Prueba | Resultado |
+|--------|-----------|
+| `GET /api/ai/status` | `provider: claude`, `model: claude-haiku-4-5`, `has_api_key: true` (sin exponer la clave). |
+| `POST /api/chat/turn` / `/chat` | Respuesta con Claude real (no stub). |
+| Business Profile en contexto | Claude usó el perfil guardado. |
+| Reconocimiento del negocio | Clínica dental (perfil de prueba). |
+| Servicios del perfil | Ortodoncia, dolor dental, radiografías reflejados en la respuesta. |
+| Persistencia | Conversación y mensajes siguieron guardándose en Supabase. |
+
+### 3. Corrección de límites de capacidades
+
+- **Problema detectado:** Claude podía describir WhatsApp, web pública u otras integraciones como si ya estuvieran activas.
+- **Cambio:** bloque **Current product capabilities** en el system prompt (`web/lib/chat/chat-engine.ts`, commit `feat: add assistant capability boundaries`).
+- **Comportamiento esperado:** el asistente distingue entre:
+  - **Capacidades actuales** — chat local, contexto de Business Profile, redacción/razonamiento/planificación en conversación.
+  - **Ayuda para planificar procesos** — borradores, flujos sugeridos, mensajes tipo plantilla (sin ejecutar integraciones).
+  - **Integraciones futuras** — WhatsApp, agenda, CRM, etc. como planificables o implementables más adelante, sin afirmar que ya están conectadas.
+
+### 4. Capacidades actuales reales
+
+El producto **sí** puede hoy:
+
+- Responder en `/chat` con Claude (o stub si se configura).
+- Usar el **Business Profile** más reciente como contexto interno del turno.
+- Ayudar a **redactar, razonar, resumir, planificar** y **sugerir workflows** en texto.
+- **Persistir** conversaciones y mensajes en Supabase.
+- Usar **resumen acumulado** y **ventana reciente** de mensajes (heredado de la base).
+- Listar conversaciones y títulos en UI (heredado de la base).
+
+### 5. Capacidades NO implementadas todavía
+
+El producto **no** tiene aún (no debe presentarse como activo):
+
+| Área | Estado |
+|------|--------|
+| WhatsApp | No implementado |
+| Web widget público | No implementado |
+| Email conectado | No implementado |
+| Calendar / agenda real | No implementado |
+| CRM real | No implementado |
+| Pagos / billing | No implementado |
+| Llamadas telefónicas | No implementado |
+| Voz | No implementada |
+| n8n activo para negocio | Desactivado (`AUTOMATIONS_ENABLED=false`) |
+| Automatizaciones externas reales | No implementadas |
+| Contacts / leads / `follow_up_tasks` | No implementados |
+
+### 6. Próximo paso (referencia)
+
+Ver sección **Recommended Next Step** más abajo: **Contacts MVP — SPEC**.
+
+---
+
 ## Security Notes
 
 - **No imprimir** `web/.env.local` ni pegar claves en chats o documentación.
 - **Supabase service role** — solo server-side (`createSupabaseServerClient()` en rutas/lib servidor).
-- **Claude API key** — solo server-side; no activar Claude sin decisión explícita.
+- **Claude API key** — solo server-side en `web/.env.local`; activada localmente en este checkpoint; no documentar ni imprimir el valor.
 - **n8n webhook secret** — solo server-side; no activar n8n sin decisión explícita.
 - **Contexto al modelo** — ventana reciente acotada + summary; **no** enviar historial completo a proveedores de IA.
 - **Business Profile en chat** — bloque compacto; sin loguear payloads completos ni secretos.
@@ -137,14 +204,15 @@ No forman parte del estado actual ni del siguiente paso documentado aquí:
 
 ## Recommended Next Step
 
-**Bloque recomendado:** **Controlled Claude Activation**
+**Bloque recomendado:** **Contacts MVP — SPEC**
 
-Objetivo futuro (solo cuando se decida explícitamente):
+Objetivo del siguiente bloque (solo documentación / diseño):
 
-1. Activar Claude manualmente en `web/.env.local` (sin imprimir claves).
-2. Probar `GET /api/ai/status`.
-3. Probar `/chat` con un Business Profile guardado.
-4. Verificar coste/tokens y calidad de respuestas.
-5. Comprobar que el asistente usa el contexto del negocio **sin inventar** datos no presentes en el perfil.
+1. Definir primero la **especificación** de contactos/leads mínimos.
+2. **No** crear SQL todavía.
+3. **No** implementar API todavía.
+4. Diseñar qué será un **contacto** o **lead** mínimo en el producto (campos, relación con conversaciones y Business Profile).
+5. Mantener el MVP **simple**; evitar un CRM completo.
+6. Alinear con límites de capacidades del asistente (sin prometer CRM activo hasta que exista).
 
-**No implementar** activación de Claude, cambios de `.env.local` ni push en este bloque de documentación.
+**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP.
