@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Este documento resume el **estado actual del producto derivado** `business-assistant-mvp`: qué está implementado, qué está verificado y qué queda fuera de alcance. Sirve como checkpoint rápido para futuros bloques de trabajo (Cursor, revisiones, specs de módulos, etc.).
+Este documento resume el **estado actual del producto derivado** `business-assistant-mvp` (**Nivel 2**): qué está implementado, qué está verificado y qué queda fuera de alcance. Sirve como checkpoint rápido para futuros bloques de trabajo (Cursor, revisiones, specs de módulos, etc.).
 
-**No describe la base congelada** `CURSOR.p1`. Para la base reutilizable, ver la documentación y specs heredadas en este repo (`docs/current-state.md`, specs de chat/automatización, etc.).
+**No describe la base congelada** `CURSOR.p1` (**Nivel 1**). Para la base reutilizable, ver la documentación y specs heredadas en este repo (`docs/current-state.md`, specs de chat/automatización, etc.).
 
 ---
 
@@ -30,7 +30,7 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 | **n8n / automatizaciones** | Desactivado en producto (`AUTOMATIONS_ENABLED=false`). |
 | **Contacts MVP v1** | Completado (SPEC, SQL, API GET/POST, UI `/contacts`). Sin integración con chat. |
 | **Follow-up Tasks MVP v1** | Completado (SPEC, SQL, API GET/POST, UI `/follow-up-tasks`). Sin integración con chat. |
-| **Navegación entre módulos** | No implementada. |
+| **Navigation MVP** | Completado (`ModuleNav` en `/chat`, `/business-profile`, `/contacts`, `/follow-up-tasks`). |
 | **Auth / multi-tenant** | No implementados. |
 
 **Commits relevantes del producto:**
@@ -45,6 +45,7 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 - `feat: add assistant capability boundaries`
 - `feat: add contacts UI` (API/SQL/SPEC en bloques previos del módulo Contacts)
 - `feat: add follow-up tasks UI` (API/SQL/SPEC en bloques previos del módulo Follow-up Tasks)
+- `feat: add module navigation`
 
 ---
 
@@ -155,6 +156,14 @@ Capacidades reutilizadas en el producto (sin duplicar la base):
 
 **Sin integración con chat ni automatizaciones en este MVP.**
 
+### Navigation MVP
+
+- **Componente:** `web/components/module-nav.tsx` — `ModuleNav` con enlaces `next/link`.
+- **Páginas:** `web/app/chat/page.tsx`, `business-profile/page.tsx`, `contacts/page.tsx`, `follow-up-tasks/page.tsx`.
+- **Rutas enlazadas:** `/chat`, `/business-profile`, `/contacts`, `/follow-up-tasks`.
+- **Comportamiento:** barra superior simple (Tailwind zinc); visible en las cuatro páginas; sin dashboard, sin sidebar compleja, sin estado activo de ruta, sin dependencias nuevas.
+- **Alcance:** solo UI de navegación; **no** se tocó lógica de negocio, APIs ni SQL.
+
 ---
 
 ## Verified Behavior
@@ -177,6 +186,7 @@ Comportamiento comprobado en el producto:
 | `GET /api/follow-up-tasks` | Lista tareas (vacía o con datos). |
 | `POST /api/follow-up-tasks` | Crea tarea válida; 400 si input inválido. |
 | `/follow-up-tasks` | Carga, crea tarea (p. ej. «Llamar a paciente UI prueba»), asocia contacto opcional, aparece en lista y persiste tras recargar. |
+| Navegación `ModuleNav` | Visible en `/chat`, `/business-profile`, `/contacts`, `/follow-up-tasks`; enlaces funcionan entre módulos y vuelta a Chat. |
 
 ---
 
@@ -241,11 +251,12 @@ El producto **no** tiene aún (no debe presentarse como activo):
 | Contacts MVP (listar/crear manual) | Implementado |
 | Follow-up Tasks MVP (listar/crear manual) | Implementado |
 | Edición/búsqueda/automatización de contactos o tareas | No implementados |
-| Navegación entre módulos | No implementada |
+| Navegación entre módulos | Implementada (`ModuleNav`) |
+| Product Demo SPEC (guion Zoom) | No documentada |
 
 ### 6. Próximo paso (referencia)
 
-Ver sección **Recommended Next Step** más abajo: **Navigation MVP**.
+Ver sección **Recommended Next Step** más abajo: **Product Demo SPEC**.
 
 ---
 
@@ -294,7 +305,7 @@ Checkpoint tras completar **Contacts MVP v1** (SPEC, SQL, API mínima, UI `/cont
 
 ### 5. Próximo paso (referencia)
 
-Ver **Recommended Next Step**: **Navigation MVP — minimal module navigation**.
+Ver **Recommended Next Step**: **Product Demo SPEC**.
 
 ---
 
@@ -348,7 +359,49 @@ Checkpoint tras completar **Follow-up Tasks MVP v1** (SPEC, SQL, API mínima, UI
 
 ### 5. Próximo paso (referencia)
 
-Ver **Recommended Next Step**: **Navigation MVP — minimal module navigation**.
+Ver **Recommended Next Step**: **Product Demo SPEC**.
+
+---
+
+## Navigation MVP Checkpoint
+
+Checkpoint tras completar **Navigation MVP — minimal module navigation**.
+
+### 1. Estado actual
+
+- **Navigation MVP completado.**
+- Componente reutilizable **`ModuleNav`** creado (`web/components/module-nav.tsx`).
+- Navegación añadida a las **cuatro páginas principales** (`/chat`, `/business-profile`, `/contacts`, `/follow-up-tasks`).
+- **No** se creó dashboard complejo.
+- **No** se tocó lógica de negocio de los módulos.
+- **No** se tocaron APIs.
+- **No** se tocó SQL ni Supabase.
+
+### 2. Qué permite hacer ahora
+
+- Moverse entre `/chat`, `/business-profile`, `/contacts` y `/follow-up-tasks`.
+- Usar el producto como **demo navegable** sin escribir URLs manualmente.
+- Presentar el flujo del producto en una **llamada de Zoom** (recorrido por módulos).
+
+### 3. Qué NO permite todavía
+
+- Dashboard completo.
+- Auth o menú por roles.
+- Navegación avanzada o estado activo de ruta.
+- Landing pública o despliegue documentado aquí.
+- Integración con WhatsApp, email o calendar.
+- Automatizaciones (n8n u otras).
+
+### 4. Nivel del producto
+
+- **`CURSOR.p1`** = **Nivel 1** / base congelada y reutilizable.
+- **`business-assistant-mvp`** = **Nivel 2** / producto demo genérico para pequeños negocios (clínica dental como caso de prueba inicial).
+- **Todavía no** es una implementación para una empresa concreta ni la web propia del usuario final.
+- La **web propia** o un **cliente piloto** deben ser **Nivel 3** y decidirse después de validar la demo.
+
+### 5. Próximo paso (referencia)
+
+Ver **Recommended Next Step**: **Product Demo SPEC**.
 
 ---
 
@@ -371,7 +424,7 @@ Ver **Recommended Next Step**: **Navigation MVP — minimal module navigation**.
 No forman parte del estado actual ni del siguiente paso documentado aquí:
 
 - Edición/búsqueda/automatización de contactos o tareas; integración contacts/tasks ↔ chat
-- Navegación entre módulos (`/chat`, `/business-profile`, `/contacts`, `/follow-up-tasks`)
+- Product Demo SPEC (guion, datos ficticios, qué mostrar en Zoom)
 - WhatsApp, voz, email, calendar
 - Billing, dashboard complejo
 - Multi-tenant, auth avanzada
@@ -382,15 +435,14 @@ No forman parte del estado actual ni del siguiente paso documentado aquí:
 
 ## Recommended Next Step
 
-**Bloque recomendado:** **Navigation MVP — minimal module navigation**
+**Bloque recomendado:** **Product Demo SPEC**
 
-Objetivo del siguiente bloque:
+Objetivo del siguiente bloque (solo documentación / diseño):
 
-1. Crear una forma **simple** de moverse entre `/chat`, `/business-profile`, `/contacts` y `/follow-up-tasks`.
-2. **No** crear dashboard complejo.
-3. **No** tocar APIs.
-4. **No** tocar SQL ni Supabase.
-5. **No** tocar el motor de chat (`chat-engine`, `/api/chat/turn`).
-6. **No** activar n8n ni automatizaciones.
+1. Definir **cómo presentar el MVP en Zoom** (orden de pantallas y mensajes clave).
+2. Definir **discurso de demo** y tono comercial (sin prometer integraciones no activas).
+3. Definir **negocio de prueba** (p. ej. clínica dental genérica) y **datos ficticios** coherentes.
+4. Definir **qué mostrar** (chat + perfil + contactos + tareas + navegación) y **qué no mostrar** (`.env`, Supabase, n8n, APIs internas).
+5. **No** crear código todavía.
 
-**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP, Contacts MVP v1, Follow-up Tasks MVP v1.
+**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP, Contacts MVP v1, Follow-up Tasks MVP v1, Navigation MVP.
