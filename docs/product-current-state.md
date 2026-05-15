@@ -29,7 +29,8 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 | **Límites de capacidades** | Bloque *Current product capabilities* en system prompt (`chat-engine.ts`). |
 | **n8n / automatizaciones** | Desactivado en producto (`AUTOMATIONS_ENABLED=false`). |
 | **Contacts MVP v1** | Completado (SPEC, SQL, API GET/POST, UI `/contacts`). Sin integración con chat. |
-| **Follow-up tasks** | No implementados. |
+| **Follow-up Tasks MVP v1** | Completado (SPEC, SQL, API GET/POST, UI `/follow-up-tasks`). Sin integración con chat. |
+| **Navegación entre módulos** | No implementada. |
 | **Auth / multi-tenant** | No implementados. |
 
 **Commits relevantes del producto:**
@@ -43,6 +44,7 @@ Este documento resume el **estado actual del producto derivado** `business-assis
 - `feat: inject business profile into chat context`
 - `feat: add assistant capability boundaries`
 - `feat: add contacts UI` (API/SQL/SPEC en bloques previos del módulo Contacts)
+- `feat: add follow-up tasks UI` (API/SQL/SPEC en bloques previos del módulo Follow-up Tasks)
 
 ---
 
@@ -123,6 +125,36 @@ Capacidades reutilizadas en el producto (sin duplicar la base):
 
 **Sin integración con chat ni automatizaciones en este MVP.**
 
+### Follow-up Tasks MVP v1
+
+#### SPEC
+
+- **Archivo:** `docs/spec-follow-up-tasks-mvp.md`
+
+#### SQL
+
+- **Archivo:** `supabase/product-follow-up-tasks.sql`
+- **Tabla:** `public.follow_up_tasks` (ejecutado manualmente en Supabase)
+- **Campos principales:** `id`, `contact_id`, `title`, `description`, `status`, `priority`, `due_at`, `completed_at`, `source`, `metadata`, `created_at`, `updated_at`
+- **Relación:** `contact_id` opcional → `public.contacts(id)` ON DELETE SET NULL
+
+#### API
+
+- **Módulo:** `web/lib/follow-up-tasks/types.ts`, `validate-input.ts`, `persistence.ts`
+- **Ruta:** `web/app/api/follow-up-tasks/route.ts`
+- **Endpoints:**
+  - `GET /api/follow-up-tasks` — hasta 50 tareas recientes (`created_at` desc)
+  - `POST /api/follow-up-tasks` — crea tarea validada
+- **Reglas:** `title` obligatorio; `contact_id` opcional (UUID válido); `status`, `priority` y `source` validados; fechas ISO o `null`; `metadata` objeto plano; 400 input inválido; 500 errores seguros.
+
+#### UI
+
+- **Archivo:** `web/app/follow-up-tasks/page.tsx`
+- **Ruta:** `/follow-up-tasks`
+- **Comportamiento:** carga y listado; estado vacío; formulario de creación; select de contacto vía `GET /api/contacts`; validación de `title` en UI; `due_at` desde `datetime-local` → ISO; estados loading/saving/error/éxito; nueva tarea arriba; persiste tras recargar; nota de privacidad (no datos clínicos sensibles).
+
+**Sin integración con chat ni automatizaciones en este MVP.**
+
 ---
 
 ## Verified Behavior
@@ -142,6 +174,9 @@ Comportamiento comprobado en el producto:
 | `GET /api/contacts` | Lista contactos (vacía o con datos). |
 | `POST /api/contacts` | Crea contacto válido; 400 si input inválido. |
 | `/contacts` | Carga, crea contacto (p. ej. «Paciente UI prueba»), aparece en lista y persiste tras recargar. |
+| `GET /api/follow-up-tasks` | Lista tareas (vacía o con datos). |
+| `POST /api/follow-up-tasks` | Crea tarea válida; 400 si input inválido. |
+| `/follow-up-tasks` | Carga, crea tarea (p. ej. «Llamar a paciente UI prueba»), asocia contacto opcional, aparece en lista y persiste tras recargar. |
 
 ---
 
@@ -204,12 +239,13 @@ El producto **no** tiene aún (no debe presentarse como activo):
 | n8n activo para negocio | Desactivado (`AUTOMATIONS_ENABLED=false`) |
 | Automatizaciones externas reales | No implementadas |
 | Contacts MVP (listar/crear manual) | Implementado |
-| `follow_up_tasks` | No implementados |
-| Edición/búsqueda/automatización de contactos | No implementados |
+| Follow-up Tasks MVP (listar/crear manual) | Implementado |
+| Edición/búsqueda/automatización de contactos o tareas | No implementados |
+| Navegación entre módulos | No implementada |
 
 ### 6. Próximo paso (referencia)
 
-Ver sección **Recommended Next Step** más abajo: **Follow-up Tasks MVP — SPEC**.
+Ver sección **Recommended Next Step** más abajo: **Navigation MVP**.
 
 ---
 
@@ -258,7 +294,61 @@ Checkpoint tras completar **Contacts MVP v1** (SPEC, SQL, API mínima, UI `/cont
 
 ### 5. Próximo paso (referencia)
 
-Ver **Recommended Next Step**: **Follow-up Tasks MVP — SPEC**.
+Ver **Recommended Next Step**: **Navigation MVP — minimal module navigation**.
+
+---
+
+## Follow-up Tasks MVP Checkpoint
+
+Checkpoint tras completar **Follow-up Tasks MVP v1** (SPEC, SQL, API mínima, UI `/follow-up-tasks`).
+
+### 1. Estado actual
+
+- **Follow-up Tasks MVP v1 completado.**
+- SPEC creada (`docs/spec-follow-up-tasks-mvp.md`).
+- SQL creado y **ejecutado manualmente** en Supabase (`public.follow_up_tasks`).
+- API mínima **GET/POST** implementada.
+- UI mínima **`/follow-up-tasks`** implementada.
+- Relación opcional con **contacts** funcionando desde la UI (select cargado con `GET /api/contacts`).
+- **No** hay integración con chat todavía.
+- **No** hay automatizaciones todavía.
+
+### 2. Qué permite hacer ahora
+
+- Listar tareas recientes.
+- Crear tareas manualmente desde la UI.
+- Asociar una tarea a un contacto existente (opcional).
+- Registrar título, descripción, estado, prioridad, fecha de vencimiento y fuente.
+- Guardar tareas **administrativas/comerciales mínimas**.
+- Ver persistencia tras recargar la página.
+
+### 3. Qué NO permite todavía
+
+- Editar tareas.
+- Eliminar tareas.
+- Marcar tareas como completadas desde la UI.
+- Ver detalle individual.
+- Buscar o filtrar.
+- Integrarse con chat.
+- Sugerir tareas automáticamente desde conversaciones.
+- Enviar WhatsApp o email.
+- Crear eventos de calendario.
+- Ejecutar automatizaciones (n8n u otras).
+- Notificar vencimientos.
+
+### 4. Seguridad y privacidad
+
+- **Follow-up Tasks MVP no debe usarse para historia clínica.**
+- **No** guardar diagnósticos ni tratamientos clínicos.
+- **No** guardar documentos identificativos ni tarjetas de pago.
+- **Minimizar** datos personales en `title` y `description`.
+- **No** enviar el listado completo de tareas a Claude salvo necesidad explícita en fases futuras (contexto mínimo).
+- Mantener **control humano** sobre cualquier seguimiento o acción futura.
+- Las tareas son **administrativas/comerciales**, no clínicas.
+
+### 5. Próximo paso (referencia)
+
+Ver **Recommended Next Step**: **Navigation MVP — minimal module navigation**.
 
 ---
 
@@ -271,6 +361,7 @@ Ver **Recommended Next Step**: **Follow-up Tasks MVP — SPEC**.
 - **Contexto al modelo** — ventana reciente acotada + summary; **no** enviar historial completo a proveedores de IA.
 - **Business Profile en chat** — bloque compacto; sin loguear payloads completos ni secretos.
 - **Contacts** — no almacenar datos clínicos sensibles; no volcar contactos completos al modelo; seguimiento con confirmación humana.
+- **Follow-up tasks** — no almacenar datos clínicos sensibles en tareas; no volcar listados completos al modelo; confirmación humana antes de acciones externas.
 - **Errores de API** — mensajes seguros al cliente; sin exponer errores crudos de Supabase.
 
 ---
@@ -279,9 +370,9 @@ Ver **Recommended Next Step**: **Follow-up Tasks MVP — SPEC**.
 
 No forman parte del estado actual ni del siguiente paso documentado aquí:
 
-- Edición/búsqueda/automatización de contactos; integración contacts ↔ chat
-- `follow_up_tasks`
-- WhatsApp, voz
+- Edición/búsqueda/automatización de contactos o tareas; integración contacts/tasks ↔ chat
+- Navegación entre módulos (`/chat`, `/business-profile`, `/contacts`, `/follow-up-tasks`)
+- WhatsApp, voz, email, calendar
 - Billing, dashboard complejo
 - Multi-tenant, auth avanzada
 - Automatizaciones irreversibles, agentes autónomos
@@ -291,15 +382,15 @@ No forman parte del estado actual ni del siguiente paso documentado aquí:
 
 ## Recommended Next Step
 
-**Bloque recomendado:** **Follow-up Tasks MVP — SPEC**
+**Bloque recomendado:** **Navigation MVP — minimal module navigation**
 
-Objetivo del siguiente bloque (solo documentación / diseño):
+Objetivo del siguiente bloque:
 
-1. Definir **tareas simples de seguimiento** (asociadas o no a contactos).
-2. **No** crear SQL todavía.
-3. **No** implementar API todavía.
-4. **No** automatizar envíos (WhatsApp, email, etc.).
-5. Mantener **confirmación humana** para cualquier acción futura.
-6. Alinear con Contacts MVP y Business Profile sin prometer CRM ni automatizaciones activas.
+1. Crear una forma **simple** de moverse entre `/chat`, `/business-profile`, `/contacts` y `/follow-up-tasks`.
+2. **No** crear dashboard complejo.
+3. **No** tocar APIs.
+4. **No** tocar SQL ni Supabase.
+5. **No** tocar el motor de chat (`chat-engine`, `/api/chat/turn`).
+6. **No** activar n8n ni automatizaciones.
 
-**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP, Contacts MVP v1.
+**Completado en bloques anteriores (referencia):** Controlled Claude Activation, Assistant Capability Boundaries MVP, Contacts MVP v1, Follow-up Tasks MVP v1.
