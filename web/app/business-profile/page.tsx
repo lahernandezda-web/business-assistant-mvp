@@ -96,7 +96,7 @@ export default function BusinessProfilePage() {
       const data: unknown = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setError(getApiError(data, "Could not load business profile"));
+        setError(getApiError(data, "No se pudo cargar el perfil del negocio"));
         setForm(emptyForm);
         setHasProfile(false);
         return;
@@ -117,7 +117,7 @@ export default function BusinessProfilePage() {
         setHasProfile(false);
       }
     } catch {
-      setError("Could not connect to the server");
+      setError("No se pudo conectar con el servidor");
       setForm(emptyForm);
       setHasProfile(false);
     } finally {
@@ -146,7 +146,7 @@ export default function BusinessProfilePage() {
 
       const name = form.name.trim();
       if (!name) {
-        setError("Name is required");
+        setError("El nombre es obligatorio");
         setSuccess(false);
         return;
       }
@@ -165,7 +165,7 @@ export default function BusinessProfilePage() {
         const data: unknown = await res.json().catch(() => null);
 
         if (!res.ok) {
-          setError(getApiError(data, "Could not save business profile"));
+          setError(getApiError(data, "No se pudo guardar el perfil del negocio"));
           return;
         }
 
@@ -180,10 +180,10 @@ export default function BusinessProfilePage() {
           setHasProfile(true);
           setSuccess(true);
         } else {
-          setError("Unexpected response from the server");
+          setError("Respuesta inesperada del servidor");
         }
       } catch {
-        setError("Could not connect to the server");
+        setError("No se pudo conectar con el servidor");
       } finally {
         setSaving(false);
       }
@@ -198,24 +198,25 @@ export default function BusinessProfilePage() {
       <ModuleNav />
       <header className="flex flex-col gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Business Profile
+          Perfil del negocio
         </h1>
         <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Basic business context used by the assistant in future phases.
+          Contexto básico del negocio que usa el asistente para responder de
+          forma más personalizada.
         </p>
       </header>
 
       {loadingProfile ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
-          Loading profile…
+          Cargando perfil…
         </p>
       ) : hasProfile ? (
         <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
-          Current profile loaded.
+          Perfil actual cargado.
         </p>
       ) : (
         <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
-          No business profile has been created yet.
+          Todavía no hay perfil del negocio creado.
         </p>
       )}
 
@@ -226,7 +227,7 @@ export default function BusinessProfilePage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Name <span className="text-red-600 dark:text-red-400">*</span>
+              Nombre <span className="text-red-600 dark:text-red-400">*</span>
             </span>
             <input
               type="text"
@@ -241,7 +242,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Industry
+              Sector
             </span>
             <input
               type="text"
@@ -254,7 +255,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Tone
+              Tono
             </span>
             <input
               type="text"
@@ -267,7 +268,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Location
+              Ubicación
             </span>
             <input
               type="text"
@@ -280,7 +281,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Website
+              Sitio web
             </span>
             <input
               type="url"
@@ -294,7 +295,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Description
+              Descripción
             </span>
             <textarea
               value={form.description}
@@ -307,7 +308,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Target customer
+              Cliente objetivo
             </span>
             <textarea
               value={form.target_customer}
@@ -320,7 +321,7 @@ export default function BusinessProfilePage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Services
+              Servicios
             </span>
             <textarea
               value={form.services}
@@ -344,7 +345,7 @@ export default function BusinessProfilePage() {
             role="status"
             aria-live="polite"
           >
-            Business profile saved.
+            Perfil guardado.
           </p>
         ) : null}
 
@@ -354,11 +355,11 @@ export default function BusinessProfilePage() {
             disabled={disabled || !form.name.trim()}
             className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
           >
-            {saving ? "Saving…" : "Save profile"}
+            {saving ? "Guardando…" : "Guardar perfil"}
           </button>
           {saving ? (
             <span className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
-              Saving profile…
+              Guardando perfil…
             </span>
           ) : null}
         </div>

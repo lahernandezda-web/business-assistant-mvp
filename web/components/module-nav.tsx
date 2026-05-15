@@ -2,15 +2,15 @@ import Link from "next/link";
 
 const MODULE_LINKS = [
   { href: "/chat", label: "Chat" },
-  { href: "/business-profile", label: "Business Profile" },
-  { href: "/contacts", label: "Contacts" },
-  { href: "/follow-up-tasks", label: "Follow-up Tasks" },
+  { href: "/business-profile", label: "Perfil del negocio" },
+  { href: "/contacts", label: "Contactos" },
+  { href: "/follow-up-tasks", label: "Tareas de seguimiento" },
 ] as const;
 
 export function ModuleNav() {
   return (
     <nav
-      aria-label="Product modules"
+      aria-label="Módulos del producto"
       className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-2 dark:border-zinc-800 dark:bg-zinc-900/50"
     >
       <ul className="flex flex-wrap gap-1.5">

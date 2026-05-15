@@ -106,24 +106,24 @@ const textareaClassName = `${inputClassName} min-h-[5rem] resize-y`;
 const selectClassName = inputClassName;
 
 const STATUS_LABELS: Record<FollowUpTaskStatus, string> = {
-  open: "Open",
-  in_progress: "In progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  archived: "Archived",
+  open: "Abierta",
+  in_progress: "En curso",
+  completed: "Completada",
+  cancelled: "Cancelada",
+  archived: "Archivada",
 };
 
 const PRIORITY_LABELS: Record<FollowUpTaskPriority, string> = {
-  low: "Low",
+  low: "Baja",
   normal: "Normal",
-  high: "High",
-  urgent: "Urgent",
+  high: "Alta",
+  urgent: "Urgente",
 };
 
 const SOURCE_LABELS: Record<FollowUpTaskSource, string> = {
   manual: "Manual",
-  chat_suggestion: "Chat suggestion",
-  system: "System",
+  chat_suggestion: "Sugerida por chat",
+  system: "Sistema",
 };
 
 export default function FollowUpTasksPage() {
@@ -154,7 +154,7 @@ export default function FollowUpTasksPage() {
 
       if (!res.ok) {
         setTasks([]);
-        setError(getApiError(data, "Could not load follow-up tasks"));
+        setError(getApiError(data, "No se pudieron cargar las tareas de seguimiento"));
         return;
       }
 
@@ -167,11 +167,11 @@ export default function FollowUpTasksPage() {
         setTasks((data as { tasks: FollowUpTask[] }).tasks);
       } else {
         setTasks([]);
-        setError("Unexpected response from the server");
+        setError("Respuesta inesperada del servidor");
       }
     } catch {
       setTasks([]);
-      setError("Could not connect to the server");
+      setError("No se pudo conectar con el servidor");
     } finally {
       setLoadingTasks(false);
     }
@@ -224,7 +224,7 @@ export default function FollowUpTasksPage() {
 
       const title = form.title.trim();
       if (!title) {
-        setError("Title is required");
+        setError("El título es obligatorio");
         setSuccess(false);
         return;
       }
@@ -243,7 +243,7 @@ export default function FollowUpTasksPage() {
         const data: unknown = await res.json().catch(() => null);
 
         if (!res.ok) {
-          setError(getApiError(data, "Could not save follow-up task"));
+          setError(getApiError(data, "No se pudo guardar la tarea de seguimiento"));
           return;
         }
 
@@ -261,10 +261,10 @@ export default function FollowUpTasksPage() {
           setForm(emptyForm);
           setSuccess(true);
         } else {
-          setError("Unexpected response from the server");
+          setError("Respuesta inesperada del servidor");
         }
       } catch {
-        setError("Could not connect to the server");
+        setError("No se pudo conectar con el servidor");
       } finally {
         setSaving(false);
       }
@@ -279,32 +279,32 @@ export default function FollowUpTasksPage() {
       <ModuleNav />
       <header className="flex flex-col gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Follow-up tasks
+          Tareas de seguimiento
         </h1>
         <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Simple follow-up actions so you do not lose commercial or
-          administrative opportunities.
+          Acciones simples de seguimiento para no perder oportunidades
+          comerciales o administrativas.
         </p>
       </header>
 
       <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
-        Use follow-up tasks for administrative or commercial actions only. Do
-        not store clinical records, diagnoses, treatment details, payment cards,
-        or sensitive documents.
+        Usa las tareas de seguimiento solo para acciones administrativas o
+        comerciales. No guardes historias clínicas, diagnósticos, tratamientos,
+        tarjetas de pago ni documentos sensibles.
       </p>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          Recent tasks
+          Tareas recientes
         </h2>
 
         {loadingTasks ? (
           <p className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
-            Loading tasks...
+            Cargando tareas…
           </p>
         ) : tasks.length === 0 ? (
           <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
-            No follow-up tasks yet.
+            Todavía no hay tareas de seguimiento.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -322,21 +322,22 @@ export default function FollowUpTasksPage() {
                   </p>
                 </div>
                 <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                  <span className="font-medium">Status:</span>{" "}
+                  <span className="font-medium">Estado:</span>{" "}
                   {STATUS_LABELS[task.status] ?? task.status}
                   {" · "}
-                  <span className="font-medium">Priority:</span>{" "}
+                  <span className="font-medium">Prioridad:</span>{" "}
                   {PRIORITY_LABELS[task.priority] ?? task.priority}
                 </p>
                 {task.contact_id ? (
                   <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                    <span className="font-medium">Contact:</span>{" "}
-                    {contactNameById.get(task.contact_id) ?? "Unknown contact"}
+                    <span className="font-medium">Contacto:</span>{" "}
+                    {contactNameById.get(task.contact_id) ??
+                      "Contacto no disponible"}
                   </p>
                 ) : null}
                 {task.due_at ? (
                   <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                    <span className="font-medium">Due:</span>{" "}
+                    <span className="font-medium">Fecha límite:</span>{" "}
                     {formatDate(task.due_at)}
                   </p>
                 ) : null}
@@ -356,13 +357,13 @@ export default function FollowUpTasksPage() {
         className="flex flex-col gap-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950"
       >
         <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          Create follow-up task
+          Crear tarea de seguimiento
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Title <span className="text-red-600 dark:text-red-400">*</span>
+              Título <span className="text-red-600 dark:text-red-400">*</span>
             </span>
             <input
               type="text"
@@ -377,7 +378,7 @@ export default function FollowUpTasksPage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Description
+              Descripción
             </span>
             <textarea
               value={form.description}
@@ -390,7 +391,7 @@ export default function FollowUpTasksPage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Contact
+              Contacto
             </span>
             <select
               value={form.contact_id}
@@ -398,7 +399,7 @@ export default function FollowUpTasksPage() {
               disabled={disabled || loadingContacts}
               className={selectClassName}
             >
-              <option value="">No contact</option>
+              <option value="">Sin contacto</option>
               {contacts.map((contact) => (
                 <option key={contact.id} value={contact.id}>
                   {contact.name}
@@ -409,7 +410,7 @@ export default function FollowUpTasksPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Status
+              Estado
             </span>
             <select
               value={form.status}
@@ -429,7 +430,7 @@ export default function FollowUpTasksPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Priority
+              Prioridad
             </span>
             <select
               value={form.priority}
@@ -449,7 +450,7 @@ export default function FollowUpTasksPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Source
+              Fuente
             </span>
             <select
               value={form.source}
@@ -469,7 +470,7 @@ export default function FollowUpTasksPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Due at
+              Fecha límite
             </span>
             <input
               type="datetime-local"
@@ -493,7 +494,7 @@ export default function FollowUpTasksPage() {
             role="status"
             aria-live="polite"
           >
-            Follow-up task saved.
+            Tarea de seguimiento guardada.
           </p>
         ) : null}
 
@@ -503,11 +504,11 @@ export default function FollowUpTasksPage() {
             disabled={disabled || !form.title.trim()}
             className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
           >
-            {saving ? "Saving…" : "Save task"}
+            {saving ? "Guardando…" : "Guardar tarea"}
           </button>
           {saving ? (
             <span className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
-              Saving task...
+              Guardando tarea…
             </span>
           ) : null}
         </div>

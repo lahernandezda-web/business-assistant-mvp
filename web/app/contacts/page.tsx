@@ -91,20 +91,20 @@ const textareaClassName = `${inputClassName} min-h-[5rem] resize-y`;
 const selectClassName = inputClassName;
 
 const STATUS_LABELS: Record<ContactStatus, string> = {
-  new: "New",
-  contacted: "Contacted",
-  interested: "Interested",
-  not_interested: "Not interested",
-  converted: "Converted",
-  archived: "Archived",
+  new: "Nuevo",
+  contacted: "Contactado",
+  interested: "Interesado",
+  not_interested: "No interesado",
+  converted: "Convertido",
+  archived: "Archivado",
 };
 
 const TYPE_LABELS: Record<ContactType, string> = {
-  lead: "Lead",
-  customer: "Customer",
-  patient: "Patient",
-  supplier: "Supplier",
-  other: "Other",
+  lead: "Prospecto",
+  customer: "Cliente",
+  patient: "Paciente",
+  supplier: "Proveedor",
+  other: "Otro",
 };
 
 export default function ContactsPage() {
@@ -125,7 +125,7 @@ export default function ContactsPage() {
 
       if (!res.ok) {
         setContacts([]);
-        setError(getApiError(data, "Could not load contacts"));
+        setError(getApiError(data, "No se pudieron cargar los contactos"));
         return;
       }
 
@@ -138,11 +138,11 @@ export default function ContactsPage() {
         setContacts((data as { contacts: Contact[] }).contacts);
       } else {
         setContacts([]);
-        setError("Unexpected response from the server");
+        setError("Respuesta inesperada del servidor");
       }
     } catch {
       setContacts([]);
-      setError("Could not connect to the server");
+      setError("No se pudo conectar con el servidor");
     } finally {
       setLoadingContacts(false);
     }
@@ -169,7 +169,7 @@ export default function ContactsPage() {
 
       const name = form.name.trim();
       if (!name) {
-        setError("Name is required");
+        setError("El nombre es obligatorio");
         setSuccess(false);
         return;
       }
@@ -188,7 +188,7 @@ export default function ContactsPage() {
         const data: unknown = await res.json().catch(() => null);
 
         if (!res.ok) {
-          setError(getApiError(data, "Could not save contact"));
+          setError(getApiError(data, "No se pudo guardar el contacto"));
           return;
         }
 
@@ -206,10 +206,10 @@ export default function ContactsPage() {
           setForm(emptyForm);
           setSuccess(true);
         } else {
-          setError("Unexpected response from the server");
+          setError("Respuesta inesperada del servidor");
         }
       } catch {
-        setError("Could not connect to the server");
+        setError("No se pudo conectar con el servidor");
       } finally {
         setSaving(false);
       }
@@ -224,31 +224,32 @@ export default function ContactsPage() {
       <ModuleNav />
       <header className="flex flex-col gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Contacts
+          Contactos
         </h1>
         <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Simple contact records for commercial and administrative follow-up.
+          Registro simple de contactos para seguimiento comercial y
+          administrativo.
         </p>
       </header>
 
       <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
-        Use contacts for administrative or commercial information only. Do not
-        store clinical records, diagnoses, treatment details, payment cards, or
-        sensitive documents.
+        Usa los contactos solo para información administrativa o comercial. No
+        guardes historias clínicas, diagnósticos, tratamientos, tarjetas de pago
+        ni documentos sensibles.
       </p>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          Recent contacts
+          Contactos recientes
         </h2>
 
         {loadingContacts ? (
           <p className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
-            Loading contacts...
+            Cargando contactos…
           </p>
         ) : contacts.length === 0 ? (
           <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
-            No contacts yet.
+            Todavía no hay contactos.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -266,12 +267,12 @@ export default function ContactsPage() {
                   </p>
                 </div>
                 <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                  <span className="font-medium">Status:</span>{" "}
+                  <span className="font-medium">Estado:</span>{" "}
                   {STATUS_LABELS[contact.status] ?? contact.status}
                   {contact.contact_type ? (
                     <>
                       {" "}
-                      · <span className="font-medium">Type:</span>{" "}
+                      · <span className="font-medium">Tipo:</span>{" "}
                       {TYPE_LABELS[contact.contact_type] ?? contact.contact_type}
                     </>
                   ) : null}
@@ -297,13 +298,13 @@ export default function ContactsPage() {
         className="flex flex-col gap-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950"
       >
         <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          Create contact
+          Crear contacto
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Name <span className="text-red-600 dark:text-red-400">*</span>
+              Nombre <span className="text-red-600 dark:text-red-400">*</span>
             </span>
             <input
               type="text"
@@ -331,7 +332,7 @@ export default function ContactsPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Phone
+              Teléfono
             </span>
             <input
               type="tel"
@@ -344,7 +345,7 @@ export default function ContactsPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Source
+              Fuente
             </span>
             <input
               type="text"
@@ -352,13 +353,13 @@ export default function ContactsPage() {
               onChange={(e) => updateField("source", e.target.value)}
               disabled={disabled}
               className={inputClassName}
-              placeholder="manual, web, referral…"
+              placeholder="manual, web, referido…"
             />
           </label>
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Status
+              Estado
             </span>
             <select
               value={form.status}
@@ -378,7 +379,7 @@ export default function ContactsPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Contact type
+              Tipo de contacto
             </span>
             <select
               value={form.contact_type}
@@ -402,7 +403,7 @@ export default function ContactsPage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Interest
+              Interés
             </span>
             <input
               type="text"
@@ -415,7 +416,7 @@ export default function ContactsPage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Notes
+              Notas
             </span>
             <textarea
               value={form.notes}
@@ -428,7 +429,7 @@ export default function ContactsPage() {
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Next follow-up
+              Próximo seguimiento
             </span>
             <input
               type="datetime-local"
@@ -452,7 +453,7 @@ export default function ContactsPage() {
             role="status"
             aria-live="polite"
           >
-            Contact saved.
+            Contacto guardado.
           </p>
         ) : null}
 
@@ -462,11 +463,11 @@ export default function ContactsPage() {
             disabled={disabled || !form.name.trim()}
             className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
           >
-            {saving ? "Saving…" : "Save contact"}
+            {saving ? "Guardando…" : "Guardar contacto"}
           </button>
           {saving ? (
             <span className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
-              Saving contact...
+              Guardando contacto…
             </span>
           ) : null}
         </div>

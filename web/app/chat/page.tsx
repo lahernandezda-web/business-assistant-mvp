@@ -92,6 +92,14 @@ function getApiError(data: unknown, fallback: string): string {
     : fallback;
 }
 
+/** Mensajes conocidos del API en inglés → texto mostrado al usuario. */
+function chatErrorForUser(message: string): string {
+  if (message === "conversation not found") {
+    return "Conversación no encontrada";
+  }
+  return message;
+}
+
 function formatLocalDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -186,7 +194,7 @@ export default function ChatPage() {
       if (result.ok) {
         setConversations(result.conversations);
       } else {
-        setError(result.error);
+        setError(chatErrorForUser(result.error));
       }
     } catch {
       setError("No se pudieron cargar las conversaciones recientes");
@@ -204,7 +212,7 @@ export default function ChatPage() {
         return;
       }
 
-      setError(result.error);
+      setError(chatErrorForUser(result.error));
       if (result.notFound) {
         try {
           localStorage.removeItem(LS_KEY);
@@ -300,7 +308,7 @@ export default function ChatPage() {
           typeof (data as { error: unknown }).error === "string"
             ? (data as { error: string }).error
             : `Error ${res.status}`;
-        setError(msg);
+        setError(chatErrorForUser(msg));
         return;
       }
 
