@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { ModuleNav } from "@/components/module-nav";
 import type { Contact } from "@/lib/contacts/types";
 import type {
   FollowUpTask,
@@ -275,6 +276,7 @@ export default function FollowUpTasksPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
+      <ModuleNav />
       <header className="flex flex-col gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           Follow-up tasks

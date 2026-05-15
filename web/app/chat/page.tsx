@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { ModuleNav } from "@/components/module-nav";
+
 const LS_KEY = "cursor_chat_conversation_id";
 
 /** Fila tal como la devuelve GET /api/chat/history */
@@ -336,6 +338,7 @@ export default function ChatPage() {
 
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-5 p-6">
+      <ModuleNav />
       <header className="flex flex-col gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
