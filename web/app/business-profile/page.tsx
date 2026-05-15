@@ -1,0 +1,366 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+import type { BusinessProfile } from "@/lib/business-profile/types";
+
+type FormValues = {
+  name: string;
+  industry: string;
+  description: string;
+  target_customer: string;
+  tone: string;
+  services: string;
+  location: string;
+  website: string;
+};
+
+const emptyForm: FormValues = {
+  name: "",
+  industry: "",
+  description: "",
+  target_customer: "",
+  tone: "",
+  services: "",
+  location: "",
+  website: "",
+};
+
+function profileToForm(profile: BusinessProfile): FormValues {
+  return {
+    name: profile.name,
+    industry: profile.industry ?? "",
+    description: profile.description ?? "",
+    target_customer: profile.target_customer ?? "",
+    tone: profile.tone ?? "",
+    services: profile.services ?? "",
+    location: profile.location ?? "",
+    website: profile.website ?? "",
+  };
+}
+
+function optionalField(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function formToPayload(form: FormValues) {
+  return {
+    name: form.name.trim(),
+    industry: optionalField(form.industry),
+    description: optionalField(form.description),
+    target_customer: optionalField(form.target_customer),
+    tone: optionalField(form.tone),
+    services: optionalField(form.services),
+    location: optionalField(form.location),
+    website: optionalField(form.website),
+  };
+}
+
+function getApiError(data: unknown, fallback: string): string {
+  return data &&
+    typeof data === "object" &&
+    "error" in data &&
+    typeof (data as { error: unknown }).error === "string"
+    ? (data as { error: string }).error
+    : fallback;
+}
+
+function isBusinessProfile(value: unknown): value is BusinessProfile {
+  if (!value || typeof value !== "object") return false;
+  const p = value as Partial<BusinessProfile>;
+  return typeof p.id === "string" && typeof p.name === "string";
+}
+
+const inputClassName =
+  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50";
+
+const textareaClassName = `${inputClassName} min-h-[6rem] resize-y`;
+
+export default function BusinessProfilePage() {
+  const [form, setForm] = useState<FormValues>(emptyForm);
+  const [hasProfile, setHasProfile] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const loadProfile = useCallback(async () => {
+    setLoadingProfile(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const res = await fetch("/api/business-profile");
+      const data: unknown = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(getApiError(data, "Could not load business profile"));
+        setForm(emptyForm);
+        setHasProfile(false);
+        return;
+      }
+
+      if (
+        data &&
+        typeof data === "object" &&
+        "profile" in data &&
+        data.profile !== null &&
+        isBusinessProfile((data as { profile: unknown }).profile)
+      ) {
+        const profile = (data as { profile: BusinessProfile }).profile;
+        setForm(profileToForm(profile));
+        setHasProfile(true);
+      } else {
+        setForm(emptyForm);
+        setHasProfile(false);
+      }
+    } catch {
+      setError("Could not connect to the server");
+      setForm(emptyForm);
+      setHasProfile(false);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadProfile();
+    });
+  }, [loadProfile]);
+
+  const updateField = useCallback(
+    (field: keyof FormValues, value: string) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      setSuccess(false);
+    },
+    [],
+  );
+
+  const saveProfile = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (saving || loadingProfile) return;
+
+      const name = form.name.trim();
+      if (!name) {
+        setError("Name is required");
+        setSuccess(false);
+        return;
+      }
+
+      setSaving(true);
+      setError(null);
+      setSuccess(false);
+
+      try {
+        const res = await fetch("/api/business-profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formToPayload(form)),
+        });
+
+        const data: unknown = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          setError(getApiError(data, "Could not save business profile"));
+          return;
+        }
+
+        if (
+          data &&
+          typeof data === "object" &&
+          "profile" in data &&
+          isBusinessProfile((data as { profile: unknown }).profile)
+        ) {
+          const profile = (data as { profile: BusinessProfile }).profile;
+          setForm(profileToForm(profile));
+          setHasProfile(true);
+          setSuccess(true);
+        } else {
+          setError("Unexpected response from the server");
+        }
+      } catch {
+        setError("Could not connect to the server");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [form, loadingProfile, saving],
+  );
+
+  const disabled = loadingProfile || saving;
+
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
+      <header className="flex flex-col gap-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Business Profile
+        </h1>
+        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          Basic business context used by the assistant in future phases.
+        </p>
+      </header>
+
+      {loadingProfile ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
+          Loading profile…
+        </p>
+      ) : hasProfile ? (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
+          Current profile loaded.
+        </p>
+      ) : (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
+          No business profile has been created yet.
+        </p>
+      )}
+
+      <form
+        onSubmit={(e) => void saveProfile(e)}
+        className="flex flex-col gap-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950"
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Name <span className="text-red-600 dark:text-red-400">*</span>
+            </span>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              disabled={disabled}
+              required
+              className={inputClassName}
+              aria-required="true"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Industry
+            </span>
+            <input
+              type="text"
+              value={form.industry}
+              onChange={(e) => updateField("industry", e.target.value)}
+              disabled={disabled}
+              className={inputClassName}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Tone
+            </span>
+            <input
+              type="text"
+              value={form.tone}
+              onChange={(e) => updateField("tone", e.target.value)}
+              disabled={disabled}
+              className={inputClassName}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Location
+            </span>
+            <input
+              type="text"
+              value={form.location}
+              onChange={(e) => updateField("location", e.target.value)}
+              disabled={disabled}
+              className={inputClassName}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Website
+            </span>
+            <input
+              type="url"
+              value={form.website}
+              onChange={(e) => updateField("website", e.target.value)}
+              disabled={disabled}
+              className={inputClassName}
+              placeholder="https://"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Description
+            </span>
+            <textarea
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              disabled={disabled}
+              className={textareaClassName}
+              rows={4}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Target customer
+            </span>
+            <textarea
+              value={form.target_customer}
+              onChange={(e) => updateField("target_customer", e.target.value)}
+              disabled={disabled}
+              className={textareaClassName}
+              rows={3}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              Services
+            </span>
+            <textarea
+              value={form.services}
+              onChange={(e) => updateField("services", e.target.value)}
+              disabled={disabled}
+              className={textareaClassName}
+              rows={3}
+            />
+          </label>
+        </div>
+
+        {error ? (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        {success ? (
+          <p
+            className="text-sm text-emerald-700 dark:text-emerald-400"
+            role="status"
+            aria-live="polite"
+          >
+            Business profile saved.
+          </p>
+        ) : null}
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="submit"
+            disabled={disabled || !form.name.trim()}
+            className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            {saving ? "Saving…" : "Save profile"}
+          </button>
+          {saving ? (
+            <span className="text-sm text-zinc-500 dark:text-zinc-500" aria-live="polite">
+              Saving profile…
+            </span>
+          ) : null}
+        </div>
+      </form>
+    </div>
+  );
+}
